@@ -89,7 +89,7 @@ public final class GoldenManScreen extends Screen {
             y += 6;
 
             addRenderableWidget(Button.builder(Component.literal("Register for verification").withStyle(ChatFormatting.GOLD), b ->
-                    net.minecraft.util.Util.getPlatform().openUri(guard.registrationUrl())
+                    Registration.register(config, guard)
             ).bounds(cx - 100, y, 200, 20).build());
             y += 24;
 
