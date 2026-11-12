@@ -7,20 +7,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.User;
 import net.minecraft.network.chat.Component;
 
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * One-click registration, no browser needed.
- * 1. Tells Mojang "I'm joining server X" (proves you own the account; no password is ever sent anywhere else).
- * 2. Sends your name, UUID, profile and X to the registration relay, which confirms it with Mojang
- *    and starts the GitHub checker.
+ * Sends only your username, UUID, SkyBlock profile ID and the action (start/end) to the registration relay,
+ * which starts the GitHub checker. The mod never reads or sends your session token.
  */
 public final class Registration {
     private Registration() {}
@@ -62,14 +59,10 @@ public final class Registration {
 
         CompletableFuture.runAsync(() -> {
             try {
-                String serverId = new BigInteger(130, new SecureRandom()).toString(16);
-                mc.services().sessionService().joinServer(user.getProfileId(), user.getAccessToken(), serverId);
-
                 JsonObject body = new JsonObject();
                 body.addProperty("username", user.getName());
                 body.addProperty("uuid", user.getProfileId().toString().replace("-", ""));
                 body.addProperty("profile_id", profileId);
-                body.addProperty("serverId", serverId);
                 body.addProperty("action", action);
 
                 HttpRequest req = HttpRequest.newBuilder(URI.create(url))

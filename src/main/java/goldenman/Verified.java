@@ -93,6 +93,7 @@ public final class Verified {
                     JsonObject p = e.getValue().getAsJsonObject();
                     if (!p.has("name") || p.get("name").isJsonNull()) continue;
                     String status = p.has("status") ? p.get("status").getAsString() : "pending";
+                    if (status.equalsIgnoreCase("ended")) continue; // ended runs aren't shown
                     Status s = switch (status.toLowerCase(Locale.ROOT)) {
                         case "verified" -> Status.VERIFIED;
                         case "failed" -> Status.FAILED;

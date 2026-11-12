@@ -145,6 +145,13 @@ def register(players, name, uuid, profile):
         return "Couldn't read the UUID / Profile ID. Please register again from the mod's menu."
     if uuid in players and players[uuid].get("status") == "failed":
         return "This account already failed Golden Man, so it can't register again."
+    if uuid in players and players[uuid].get("status") == "ended" and players[uuid].get("profile") == profile:
+        # Coming back to a run that was ended (e.g. ended by mistake): re-check it without the fresh-profile rule
+        entry = players[uuid]
+        entry["status"] = "pending"
+        status, reasons = check(uuid, entry, players, registering=False)
+        apply_result(uuid, entry, status, reasons)
+        return f"**{entry['name']}**: {entry['status'].upper()} (run resumed)"
     entry = {"name": current_name(uuid) or name, "profile": profile,
              "registered": datetime.date.today().isoformat()}
     status, reasons = check(uuid, entry, players, registering=True)
@@ -173,9 +180,9 @@ def main():
         payload = event.get("client_payload", {})
         if event.get("action") == "quit":
             uuid = clean_uuid(payload.get("uuid"))
-            # Ending a run removes you from the list; a failed run stays on record.
+            # Ending a run hides you from the list; a failed run stays on record.
             if uuid in players and players[uuid].get("status") != "failed":
-                del players[uuid]
+                players[uuid]["status"] = "ended"
                 print(f"{uuid} ended their run")
         else:
             print(register(players, payload.get("name"), clean_uuid(payload.get("uuid")),
@@ -189,7 +196,7 @@ def main():
         gh(f"/issues/{issue['number']}", {"state": "closed"}, "PATCH")
     else:
         for uuid, entry in list(players.items()):
-            if entry.get("status") == "failed":
+            if entry.get("status") in ("failed", "ended"):
                 continue
             status, reasons = check(uuid, entry, players, registering=False)
             entry["name"] = current_name(uuid) or entry.get("name")
