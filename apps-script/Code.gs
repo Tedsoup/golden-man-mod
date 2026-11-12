@@ -1,7 +1,7 @@
 /**
  * Golden Man registration relay (Google Apps Script web app).
  *
- * The mod sends:  { username, uuid, profile_id, serverId }
+ * The mod sends:  { username, uuid, profile_id, serverId, action }   (action: "register" or "quit")
  * 1. Proves the player owns the account: the mod has just told Mojang it "joined" serverId,
  *    which only the real logged-in account can do. We ask Mojang to confirm.
  * 2. Asks the GitHub checker (Tedsoup/GoldenMan) to verify the profile.
@@ -20,6 +20,7 @@ function doPost(e) {
     const uuid = String(req.uuid || '').replace(/-/g, '').toLowerCase();
     const profile = String(req.profile_id || '').toLowerCase();
     const serverId = String(req.serverId || '');
+    const action = req.action === 'quit' ? 'quit' : 'register';
 
     if (!/^[A-Za-z0-9_]{1,16}$/.test(name) || !/^[0-9a-f]{32}$/.test(uuid)
         || !/^[0-9a-f-]{32,36}$/.test(profile) || !/^-?[0-9a-f]{1,40}$/.test(serverId)) {
@@ -28,8 +29,8 @@ function doPost(e) {
 
     // Slow down spam: one attempt per account per minute
     const cache = CacheService.getScriptCache();
-    if (cache.get('reg:' + uuid)) return reply(false, 'Please wait a minute before trying again.');
-    cache.put('reg:' + uuid, '1', 60);
+    if (cache.get(action + ':' + uuid)) return reply(false, 'Please wait a minute before trying again.');
+    cache.put(action + ':' + uuid, '1', 60);
 
     // 1. Ownership check with Mojang
     const mojang = UrlFetchApp.fetch(
@@ -49,7 +50,7 @@ function doPost(e) {
       contentType: 'application/json',
       headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' },
       payload: JSON.stringify({
-        event_type: 'register',
+        event_type: action,
         client_payload: { uuid: uuid, profile_id: profile, name: player.name }
       }),
       muteHttpExceptions: true
@@ -57,6 +58,7 @@ function doPost(e) {
     if (gh.getResponseCode() !== 204) {
       return reply(false, 'The registration service had a problem (' + gh.getResponseCode() + '). Tell the developer.');
     }
+    if (action === 'quit') return reply(true, 'You were removed from the Golden Man list.');
     return reply(true, 'Registered! Your profile is being checked; your status updates within a few minutes.');
   } catch (err) {
     return reply(false, 'Registration error: ' + err);

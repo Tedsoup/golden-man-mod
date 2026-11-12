@@ -13,16 +13,17 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
- * Recolors player names inside tab-list/chat text:
- *  - the mod's creator: dark red
- *  - Golden Man players (verified, or you while active): yellow (MVP++ is gold, so this stays distinct)
- *  - confirmed cheaters: their name gets a line through it
+ * Recolors player names inside tab-list/chat text, for everyone who has the mod:
+ *  - the mod's creator: pink
+ *  - verified Golden Man players: yellow (MVP++ is gold, so this stays distinct)
+ *  - Golden Man players still being verified: yellow italic
+ *  - players who failed: their name gets a line through it
  * Only Minecraft's built-in colors are used, because some tab/chat mods turn custom RGB colors into "<#hex>" text.
  */
 public final class NameGlow {
     private NameGlow() {}
 
-    public static final ChatFormatting CREATOR = ChatFormatting.DARK_RED;
+    public static final ChatFormatting CREATOR = ChatFormatting.LIGHT_PURPLE;
     public static final ChatFormatting GOLDEN = ChatFormatting.YELLOW;
 
     // Used for our own menu title only (drawn by us, so RGB is safe there)
@@ -53,21 +54,21 @@ public final class NameGlow {
     public static Map<String, UnaryOperator<Style>> currentRules(Guard guard, Verified verified) {
         Map<String, UnaryOperator<Style>> rules = new HashMap<>();
         if (verified != null) {
-            for (Map.Entry<String, Verified.Status> e : verified.all().entrySet()) {
-                switch (e.getValue()) {
+            for (Map.Entry<String, Verified.Entry> e : verified.all().entrySet()) {
+                switch (e.getValue().status()) {
                     case VERIFIED -> rules.put(e.getKey(), s -> s.withColor(GOLDEN));
+                    case PENDING -> rules.put(e.getKey(), s -> s.withColor(GOLDEN).withItalic(true));
                     case FAILED -> rules.put(e.getKey(), s -> s.withStrikethrough(true));
-                    default -> { }
                 }
             }
         }
+        // You, before your registration shows up on the list
         String me = Minecraft.getInstance().getUser().getName();
-        if (me != null && guard != null && guard.enforcing() && guard.glowEnabled()) {
-            String failed = guard.localFailure();
-            if (failed != null && !guard.isDev()) rules.put(me.toLowerCase(Locale.ROOT), s -> s.withStrikethrough(true));
-            else rules.put(me.toLowerCase(Locale.ROOT), s -> s.withColor(GOLDEN));
+        if (me != null && guard != null && guard.enforcing() && !rules.containsKey(me.toLowerCase(Locale.ROOT))) {
+            if (guard.localFailure() != null && !guard.isDev()) rules.put(me.toLowerCase(Locale.ROOT), s -> s.withStrikethrough(true));
+            else rules.put(me.toLowerCase(Locale.ROOT), s -> s.withColor(GOLDEN).withItalic(true));
         }
-        // The creator is always dark red
+        // The creator is always pink
         rules.put(Dev.NAME, s -> s.withColor(CREATOR));
         return rules;
     }

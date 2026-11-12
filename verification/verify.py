@@ -169,9 +169,17 @@ def main():
 
     if event_name == "repository_dispatch" and event_path:
         with open(event_path) as f:
-            payload = json.load(f).get("client_payload", {})
-        print(register(players, payload.get("name"), clean_uuid(payload.get("uuid")),
-                       (payload.get("profile_id") or "").strip().lower()))
+            event = json.load(f)
+        payload = event.get("client_payload", {})
+        if event.get("action") == "quit":
+            uuid = clean_uuid(payload.get("uuid"))
+            # Ending a run removes you from the list; a failed run stays on record.
+            if uuid in players and players[uuid].get("status") != "failed":
+                del players[uuid]
+                print(f"{uuid} ended their run")
+        else:
+            print(register(players, payload.get("name"), clean_uuid(payload.get("uuid")),
+                           (payload.get("profile_id") or "").strip().lower()))
     elif event_name == "issues" and event_path:
         with open(event_path) as f:
             issue = json.load(f)["issue"]

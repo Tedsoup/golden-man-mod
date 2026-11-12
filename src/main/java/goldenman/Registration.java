@@ -32,9 +32,18 @@ public final class Registration {
     private static volatile boolean busy;
 
     public static void register(Config config, Guard guard) {
+        send(config, guard, "register");
+    }
+
+    /** Takes you off the public list when you end your run. */
+    public static void quit(Config config, Guard guard) {
+        send(config, guard, "quit");
+    }
+
+    private static void send(Config config, Guard guard, String action) {
         String url = config.registerUrl();
         if (url.isBlank()) {
-            GoldenMan.tell(Component.literal("Registration isn't set up yet. Ask the developer.").withStyle(ChatFormatting.RED));
+            GoldenMan.tell(Component.literal("Verification isn't set up yet.").withStyle(ChatFormatting.RED));
             return;
         }
         if (guard.profileId() == null) {
@@ -43,7 +52,9 @@ public final class Registration {
         }
         if (busy) return;
         busy = true;
-        GoldenMan.tell(Component.literal("Registering for verification...").withStyle(ChatFormatting.YELLOW));
+        if (action.equals("register")) {
+            GoldenMan.tell(Component.literal("Registering for verification...").withStyle(ChatFormatting.YELLOW));
+        }
 
         Minecraft mc = Minecraft.getInstance();
         User user = mc.getUser();
@@ -59,6 +70,7 @@ public final class Registration {
                 body.addProperty("uuid", user.getProfileId().toString().replace("-", ""));
                 body.addProperty("profile_id", profileId);
                 body.addProperty("serverId", serverId);
+                body.addProperty("action", action);
 
                 HttpRequest req = HttpRequest.newBuilder(URI.create(url))
                         .timeout(Duration.ofSeconds(30))

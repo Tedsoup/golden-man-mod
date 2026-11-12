@@ -132,14 +132,14 @@ public final class Config {
     /** Set once the relay is deployed. */
     public static final String REGISTER_URL = "https://script.google.com/macros/s/AKfycbzsTiJ8Pq3vl17c_fGZxLYpxBIjM5HyLJM0yEcQCp7m4gd7BmRRbLib9Kg3jWpYWhc6qQ/exec";
 
-    // --- name glow ---
+    // --- first-run hint ---
 
-    public boolean glow() {
-        return Boolean.parseBoolean(props.getProperty("glow", "true"));
+    public boolean welcomed() {
+        return Boolean.parseBoolean(props.getProperty("welcomed", "false"));
     }
 
-    public void setGlow(boolean value) {
-        props.setProperty("glow", Boolean.toString(value));
+    public void setWelcomed() {
+        props.setProperty("welcomed", "true");
         save();
     }
 
