@@ -139,6 +139,24 @@ def parse_issue(body):
     return fields.get("username"), clean_uuid(fields.get("uuid")), (fields.get("profile id") or "").strip().lower()
 
 
+def register(players, name, uuid, profile):
+    """Checks a new registration, stores it, and returns a message describing the result."""
+    if not uuid or not profile:
+        return "Couldn't read the UUID / Profile ID. Please register again from the mod's menu."
+    if uuid in players and players[uuid].get("status") == "failed":
+        return "This account already failed Golden Man, so it can't register again."
+    entry = {"name": current_name(uuid) or name, "profile": profile,
+             "registered": datetime.date.today().isoformat()}
+    status, reasons = check(uuid, entry, players, registering=True)
+    players[uuid] = entry
+    apply_result(uuid, entry, status, reasons)
+    why = entry.get("notes") if entry.get("dev") else entry.get("reasons")
+    msg = f"**{entry['name']}**: {entry['status'].upper()}" + (("\n\n- " + "\n- ".join(why)) if why else "")
+    if entry.get("dev"):
+        msg += "\n\n(Developer account: these checks are only notes.)"
+    return msg
+
+
 def main():
     if not API_KEY:
         sys.exit("HYPIXEL_API_KEY secret is missing")
@@ -149,25 +167,16 @@ def main():
     event_name = os.environ.get("GITHUB_EVENT_NAME", "")
     event_path = os.environ.get("GITHUB_EVENT_PATH", "")
 
-    if event_name == "issues" and event_path:
+    if event_name == "repository_dispatch" and event_path:
+        with open(event_path) as f:
+            payload = json.load(f).get("client_payload", {})
+        print(register(players, payload.get("name"), clean_uuid(payload.get("uuid")),
+                       (payload.get("profile_id") or "").strip().lower()))
+    elif event_name == "issues" and event_path:
         with open(event_path) as f:
             issue = json.load(f)["issue"]
         name, uuid, profile = parse_issue(issue.get("body"))
-        if not uuid or not profile:
-            msg = "Couldn't read the UUID / Profile ID from this form. Please register again from the mod's menu."
-        elif uuid in players and players[uuid].get("status") == "failed":
-            msg = "This account already failed Golden Man, so it can't register again. If you think this is a mistake, email the developer."
-        else:
-            entry = {"name": current_name(uuid) or name, "profile": profile,
-                     "registered": datetime.date.today().isoformat()}
-            status, reasons = check(uuid, entry, players, registering=True)
-            players[uuid] = entry
-            apply_result(uuid, entry, status, reasons)
-            shown = entry["status"]
-            why = entry.get("notes") if entry.get("dev") else entry.get("reasons")
-            msg = f"**{entry['name']}**: {shown.upper()}" + (("\n\n- " + "\n- ".join(why)) if why else "")
-            if entry.get("dev"):
-                msg += "\n\n(Developer account: these checks are only notes.)"
+        msg = register(players, name, uuid, profile)
         gh(f"/issues/{issue['number']}/comments", {"body": msg}, "POST")
         gh(f"/issues/{issue['number']}", {"state": "closed"}, "PATCH")
     else:

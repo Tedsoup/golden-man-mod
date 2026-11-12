@@ -40,6 +40,11 @@ public final class Verified {
         return byName;
     }
 
+    /** Check again soon (e.g. right after registering). */
+    public void refreshSoon() {
+        lastFetch = System.currentTimeMillis() - REFRESH_MS + 90_000;
+    }
+
     public void tick() {
         long now = System.currentTimeMillis();
         if (fetching || now - lastFetch < REFRESH_MS) return;
@@ -60,6 +65,25 @@ public final class Verified {
                 .whenComplete((v, e) -> fetching = false);
     }
 
+    /** Tells you in chat when your own verification status changes. */
+    private void notifyOwnChange(Map<String, Status> fresh) {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        String me = mc.getUser().getName().toLowerCase(Locale.ROOT);
+        Status before = byName.get(me);
+        Status after = fresh.get(me);
+        if (after == null || after == before || lastFetchWasFirst) return;
+        String text = switch (after) {
+            case VERIFIED -> "You are now a VERIFIED Golden Man!";
+            case PENDING -> "Your Golden Man verification is pending (check that all API settings are on, and that your co-op members registered).";
+            case FAILED -> "You FAILED Golden Man verification.";
+        };
+        net.minecraft.ChatFormatting color = after == Status.VERIFIED ? net.minecraft.ChatFormatting.GOLD
+                : after == Status.FAILED ? net.minecraft.ChatFormatting.DARK_RED : net.minecraft.ChatFormatting.YELLOW;
+        mc.execute(() -> GoldenMan.tell(net.minecraft.network.chat.Component.literal(text).withStyle(color)));
+    }
+
+    private volatile boolean lastFetchWasFirst = true;
+
     void parse(String body) {
         try {
             JsonObject root = JsonParser.parseString(body).getAsJsonObject();
@@ -78,6 +102,8 @@ public final class Verified {
                     fresh.put(p.get("name").getAsString().toLowerCase(Locale.ROOT), s);
                 }
             }
+            notifyOwnChange(fresh);
+            lastFetchWasFirst = false;
             byName.clear();
             byName.putAll(fresh);
         } catch (Exception ex) {

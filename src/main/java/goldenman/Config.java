@@ -124,6 +124,14 @@ public final class Config {
         return r.isEmpty() ? "" : "https://raw.githubusercontent.com/" + r + "/main/players.json";
     }
 
+    /** URL of the registration relay (Google Apps Script web app). */
+    public String registerUrl() {
+        return props.getProperty("registerUrl", REGISTER_URL).trim();
+    }
+
+    /** Set once the relay is deployed. */
+    public static final String REGISTER_URL = "https://script.google.com/macros/s/AKfycbzsTiJ8Pq3vl17c_fGZxLYpxBIjM5HyLJM0yEcQCp7m4gd7BmRRbLib9Kg3jWpYWhc6qQ/exec";
+
     // --- name glow ---
 
     public boolean glow() {
