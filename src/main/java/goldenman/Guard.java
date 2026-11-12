@@ -16,8 +16,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.component.ItemLore;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -61,10 +59,6 @@ public final class Guard {
 
     public boolean enforcing() {
         return config.isEnrolled(profileId);
-    }
-
-    public boolean glowEnabled() {
-        return config.glow();
     }
 
     public String localFailure() {
@@ -132,23 +126,6 @@ public final class Guard {
                 .withStyle(ChatFormatting.LIGHT_PURPLE));
     }
 
-    /** Link that opens the prefilled GitHub registration form for this profile. */
-    public String registrationUrl() {
-        Minecraft mc = Minecraft.getInstance();
-        String uuid = mc.getUser().getProfileId().toString().replace("-", "");
-        String name = mc.getUser().getName();
-        String title = "Register " + name;
-        return "https://github.com/" + config.repo() + "/issues/new?template=register.yml"
-                + "&title=" + enc(title)
-                + "&username=" + enc(name)
-                + "&uuid=" + enc(uuid)
-                + "&profile_id=" + enc(profileId == null ? "" : profileId);
-    }
-
-    private static String enc(String s) {
-        return URLEncoder.encode(s, StandardCharsets.UTF_8);
-    }
-
     /** Looks through Bazaar order/history menus once their items have loaded. */
     private void scanBazaarMenus(Minecraft client) {
         Screen screen = client.gui.screen();
@@ -206,6 +183,10 @@ public final class Guard {
             profileId = m.group(1).toLowerCase();
             if (enforcing()) {
                 GoldenMan.tell(Component.literal("Golden Man is active on this profile.").withStyle(ChatFormatting.GOLD));
+            } else if (!config.welcomed()) {
+                config.setWelcomed();
+                GoldenMan.tell(Component.literal("Golden Man mod installed! Press [" + GoldenMan.menuKeyName()
+                        + "] to start a run on a fresh profile.").withStyle(ChatFormatting.YELLOW));
             }
             return;
         }
@@ -308,11 +289,6 @@ public final class Guard {
         String product = Rules.productFromTitle(title);
         if (product == null) product = lastProduct;
         return Rules.blockClick(title, Rules.clean(stack.getHoverName().getString()), true, product) != null;
-    }
-
-    /** Your name glows while Golden Man is active on this profile (and the glow setting is on). */
-    public boolean shouldGlow() {
-        return enforcing() && config.glow();
     }
 
     // ---------- messages ----------

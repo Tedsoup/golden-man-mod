@@ -12,13 +12,13 @@ A client-side Fabric mod for Hypixel SkyBlock (Minecraft 26.2) that enforces the
 - NPC shops and the Dark Auction are fine.
 
 ## Using it
-- Press **G** (or type `/goldenman`) to open the Golden Man menu: start/stop your run, manage co-op members, register for verification, toggle debug.
+- Press **G** (or type `/goldenman`) to open the Golden Man menu. Starting a run registers you for verification automatically; co-op trade partners are managed in the same menu.
 - Golden Man must be started on a fresh profile below SkyBlock level 7.
 - Turn on all API settings in SkyBlock (SkyBlock Menu → Settings → API Settings) before registering.
 
 ## Name colors (tab list and chat)
-- **Dark red:** tedsoup, the creator of the mod
-- **Yellow:** verified Golden Man players
+- **Pink:** tedsoup, the creator of the mod
+- **Yellow:** verified Golden Man players (*italic* while verification is pending)
 - ~~Strikethrough~~: players who failed verification
 
 ## Verification

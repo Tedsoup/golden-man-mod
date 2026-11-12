@@ -3,9 +3,14 @@
   "id": "goldenman",
   "version": "${version}",
   "name": "Golden Man",
-  "description": "Enforces the Golden Man challenge on Hypixel SkyBlock: insta-sell to the Bazaar only (plus Booster Cookie insta-buys), no Auction House, no trading outside your co-op.",
-  "authors": ["Moises Jabbour Yammine"],
+  "description": "A SkyBlock challenge mode: Ironman, but you can insta-sell to the Bazaar (and buy Booster Cookies). Blocks the Auction House, Bazaar buying and non-co-op trades, verifies runs through the Hypixel API, and shows other Golden Man players in your tab list. Press G to open the menu.",
+  "authors": ["tedsoup"],
+  "contact": {
+    "homepage": "https://tedsoup.github.io/GoldenMan/",
+    "issues": "https://github.com/Tedsoup/GoldenMan/issues"
+  },
   "license": "MIT",
+  "icon": "assets/goldenman/icon.png",
   "environment": "client",
   "entrypoints": {
     "client": ["goldenman.GoldenMan"]
