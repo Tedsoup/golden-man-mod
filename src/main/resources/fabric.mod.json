@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "goldenman",
+  "version": "${version}",
+  "name": "Golden Man",
+  "description": "Enforces the Golden Man challenge on Hypixel SkyBlock: insta-sell to the Bazaar only (plus Booster Cookie insta-buys), no Auction House, no trading outside your co-op.",
+  "authors": ["Moises Jabbour Yammine"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["goldenman.GoldenMan"]
+  },
+  "mixins": ["goldenman.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.0",
+    "fabric-api": "*",
+    "minecraft": ">=26.2"
+  }
+}

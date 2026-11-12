@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "goldenman.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "MultiPlayerGameModeMixin",
+    "AbstractContainerScreenMixin",
+    "PlayerTabOverlayMixin",
+    "PlayerInfoMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
